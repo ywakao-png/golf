@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ゴルフアドバイス</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #2d6a4f;
+            --primary-light: #40916c;
+            --primary-dark: #1b4332;
+            --accent: #74c69d;
+            --bg: #f0f4f1;
+            --card: #ffffff;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --border: #dee2e6;
+            --danger: #dc3545;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 72px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 14px 16px;
+            text-align: center;
+            font-size: 17px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .nav-item {
+            flex: 1; padding: 10px 6px 8px;
+            text-align: center; cursor: pointer;
+            font-size: 11px; color: var(--text-muted);
+            border: none; background: none; font-family: inherit;
+        }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+        /* Pages */
+        .page { display: none; padding: 14px; }
+        .page.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .card-title {
+            font-size: 14px; font-weight: bold;
+            color: var(--primary-dark); margin-bottom: 12px;
+        }
+
+        /* ===== Main: Selector Rows ===== */
+        .selector-card {
+            background: var(--card);
+            border-radius: 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .sel-row {
+            display: flex;
+            align-items: center;
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--bg);
+            cursor: pointer;
+            gap: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .sel-row:last-child { border-bottom: none; }
+        .sel-row:active { background: #f5f5f5; }
+        .sel-row-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
+        .sel-row-label { font-size: 13px; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+        .sel-row-value {
+            flex: 1; font-size: 14px; font-weight: 500;
+            color: var(--text); overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .sel-row-value.empty { color: var(--text-muted); font-weight: normal; }
+        .sel-row-arrow { color: var(--text-muted); font-size: 18px; flex-shrink: 0; }
+
+        /* ===== Form ===== */
+        label {
+            display: block; font-size: 12px;
+            color: var(--text-muted); margin-top: 12px; margin-bottom: 4px;
+        }
+        label:first-child { margin-top: 0; }
+        input[type="text"], input[type="number"], input[type="password"], select, textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid var(--border); border-radius: 8px;
+            font-size: 15px; background: white;
+            color: var(--text); font-family: inherit; -webkit-appearance: none;
+        }
+        textarea { resize: vertical; }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 16px; border-radius: 8px; border: none;
+            font-size: 14px; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 5px; font-weight: 500; transition: opacity 0.15s;
+        }
+        .btn:active { opacity: 0.75; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 7px 12px; font-size: 12px; }
+        .btn-full { width: 100%; }
+        .btn-large { padding: 15px; font-size: 16px; font-weight: bold; }
+        .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Input with unit */
+        .input-unit { display: flex; align-items: center; gap: 6px; }
+        .input-unit input { flex: 1; }
+        .unit { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+        /* Gender toggle */
+        .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .toggle-opt {
+            flex: 1; padding: 10px; text-align: center; cursor: pointer;
+            font-size: 14px; background: white; border: none; font-family: inherit;
+        }
+        .toggle-opt.active { background: var(--primary); color: white; }
+
+        /* Accordion */
+        .accordion { margin-bottom: 10px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .acc-header {
+            background: white; padding: 15px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; font-size: 15px; font-weight: bold;
+            border: none; width: 100%; text-align: left;
+            font-family: inherit; color: var(--text);
+        }
+        .acc-header:active { background: #f8f8f8; }
+        .acc-arrow { transition: transform 0.2s; display: inline-block; color: var(--text-muted); }
+        .acc-header.open .acc-arrow { transform: rotate(180deg); }
+        .acc-body { display: none; padding: 0 16px 16px; background: white; border-top: 1px solid var(--border); }
+        .acc-body.open { display: block; }
+        .acc-body > label:first-child { margin-top: 14px; }
+        .acc-title { display: flex; align-items: center; flex: 1; gap: 8px; }
+
+        /* Divider */
+        hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+        /* Modal (bottom sheet) */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; border-radius: 20px 20px 0 0;
+            width: 100%; max-height: 80vh; overflow-y: auto;
+            padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+        .modal-title {
+            font-size: 16px; font-weight: bold;
+            margin-bottom: 16px; text-align: center; color: var(--primary-dark);
+        }
+
+        /* Preset list item */
+        .preset-item {
+            display: flex; align-items: center;
+            padding: 11px 12px; border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 8px; gap: 6px; background: #fafafa;
+        }
+        .preset-item.selected { border-color: var(--primary); background: #f0faf4; }
+        .preset-name { flex: 1; font-size: 14px; font-weight: 500; }
+        .default-badge {
+            font-size: 10px; background: var(--primary); color: white;
+            padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+        }
+        .active-badge {
+            font-size: 10px; background: var(--accent); color: var(--primary-dark);
+            padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+        }
+
+        /* Settings preset management */
+        .preset-mgmt-item {
+            display: flex; align-items: center;
+            padding: 11px 12px; border: 1px solid var(--border);
+            border-radius: 8px; margin-bottom: 8px; gap: 6px;
+        }
+        .preset-mgmt-item.is-default { border-color: var(--accent); background: #f0faf4; }
+
+        /* Advice result */
+        .advice-box {
+            background: #f0faf4; border: 1px solid var(--accent);
+            border-radius: 10px; padding: 16px; font-size: 14px;
+            line-height: 1.75; white-space: pre-wrap; word-break: break-word;
+        }
+
+        /* Loading */
+        .loading { text-align: center; padding: 28px; color: var(--text-muted); }
+        .spinner {
+            display: inline-block; width: 28px; height: 28px;
+            border: 3px solid var(--accent); border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            background: #fff5f5; border: 1px solid #f5c6cb;
+            border-radius: 10px; padding: 14px; color: var(--danger); font-size: 14px;
+        }
+        .note { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.6; }
+
+        /* Share card */
+        .share-card {
+            background: var(--card); border-radius: 12px; padding: 16px;
+            margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--accent);
+        }
+        .share-card-title { font-size: 14px; font-weight: bold; color: var(--primary-dark); margin-bottom: 6px; }
+        .share-note { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+
+        /* Edit form inside modal */
+        .edit-form { padding-top: 4px; }
+        .edit-form label:first-child { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="header">⛳ ゴルフアドバイス</div>
+
+<!-- ===================== MAIN PAGE ===================== -->
+<div id="page-main" class="page active">
+
+    <!-- Selector rows -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 12px 16px 8px; font-size: 12px; font-weight: bold; color: var(--text-muted); background: var(--bg);">使用する設定を選択</div>
+        <div class="sel-row" onclick="openSelectModal('condition')">
+            <span class="sel-row-icon">📝</span>
+            <span class="sel-row-label">アドバイス条件</span>
+            <span class="sel-row-value empty" id="main-condition">未選択</span>
+            <span class="sel-row-arrow">›</span>
+        </div>
+        <div class="sel-row" onclick="openSelectModal('profile')">
+            <span class="sel-row-icon">👤</span>
+            <span class="sel-row-label">プロフィール</span>
+            <span class="sel-row-value empty" id="main-profile">未選択</span>
+            <span class="sel-row-arrow">›</span>
+        </div>
+        <div class="sel-row" onclick="openSelectModal('club')">
+            <span class="sel-row-icon">🏌️</span>
+            <span class="sel-row-label">クラブ</span>
+            <span class="sel-row-value empty" id="main-club">未選択</span>
+            <span class="sel-row-arrow">›</span>
+        </div>
+        <div class="sel-row" onclick="openSelectModal('ball')">
+            <span class="sel-row-icon">⚪</span>
+            <span class="sel-row-label">ボール</span>
+            <span class="sel-row-value empty" id="main-ball">未選択</span>
+            <span class="sel-row-arrow">›</span>
+        </div>
+        <div class="sel-row" onclick="openSelectModal('weather')">
+            <span class="sel-row-icon">🌤️</span>
+            <span class="sel-row-label">天気</span>
+            <span class="sel-row-value empty" id="main-weather">未選択</span>
+            <span class="sel-row-arrow">›</span>
+        </div>
+    </div>
+
+    <!-- Golf data -->
+    <div class="card">
+        <div class="card-title">📋 ゴルフデータ（16項目）</div>
+        <textarea id="golf-data" rows="10" placeholder="ゴルフデータをここに貼り付けてください..."></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-full btn-large" onclick="generateAdvice()">
+        🤖 アドバイスを生成
+    </button>
+
+    <div id="advice-result" style="margin-top: 14px;"></div>
+</div>
+
+<!-- ===================== SETTINGS PAGE ===================== -->
+<div id="page-settings" class="page">
+
+    <!-- Export / Import -->
+    <div class="share-card">
+        <div class="share-card-title">📤 設定の共有</div>
+        <p class="share-note">エクスポートしたJSONを渡すと、他の人が同じプリセットをインポートして使えます。APIキーは含まれません。</p>
+        <div class="btn-group">
+            <button class="btn btn-primary" style="flex:1;" onclick="exportSettings()">📤 エクスポート</button>
+            <button class="btn btn-secondary" style="flex:1;" onclick="document.getElementById('import-file').click()">📥 インポート</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importSettings(event)">
+    </div>
+
+    <!-- Advice Conditions -->
+    <div class="accordion">
+        <button class="acc-header" onclick="toggleAcc(this)">
+            <span class="acc-title">📝 アドバイス条件</span>
+            <span class="acc-arrow">▼</span>
+        </button>
+        <div class="acc-body">
+            <div style="margin-top:14px;" id="mgmt-list-condition"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="openAddModal('condition')">＋ 条件を追加</button>
+        </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="accordion">
+        <button class="acc-header" onclick="toggleAcc(this)">
+            <span class="acc-title">👤 プロフィール</span>
+            <span class="acc-arrow">▼</span>
+        </button>
+        <div class="acc-body">
+            <div style="margin-top:14px;" id="mgmt-list-profile"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="openAddModal('profile')">＋ プロフィールを追加</button>
+        </div>
+    </div>
+
+    <!-- Club -->
+    <div class="accordion">
+        <button class="acc-header" onclick="toggleAcc(this)">
+            <span class="acc-title">🏌️ クラブ</span>
+            <span class="acc-arrow">▼</span>
+        </button>
+        <div class="acc-body">
+            <div style="margin-top:14px;" id="mgmt-list-club"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="openAddModal('club')">＋ クラブを追加</button>
+        </div>
+    </div>
+
+    <!-- Ball -->
+    <div class="accordion">
+        <button class="acc-header" onclick="toggleAcc(this)">
+            <span class="acc-title">⚪ ボール</span>
+            <span class="acc-arrow">▼</span>
+        </button>
+        <div class="acc-body">
+            <div style="margin-top:14px;" id="mgmt-list-ball"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="openAddModal('ball')">＋ ボールを追加</button>
+        </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="accordion">
+        <button class="acc-header" onclick="toggleAcc(this)">
+            <span class="acc-title">🌤️ 天気・コンディション</span>
+            <span class="acc-arrow">▼</span>
+        </button>
+        <div class="acc-body">
+            <div style="margin-top:14px;" id="mgmt-list-weather"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="openAddModal('weather')">＋ 天気を追加</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===================== API PAGE ===================== -->
+<div id="page-api" class="page">
+    <div class="card">
+        <div class="card-title">🔑 OpenAI APIキー</div>
+        <label>APIキー</label>
+        <input type="password" id="api-key" placeholder="sk-...">
+        <div class="btn-group">
+            <button class="btn btn-primary btn-full" onclick="saveApiKey()">💾 保存</button>
+        </div>
+        <p class="note">※ APIキーはこのデバイスのブラウザ内にのみ保存されます。</p>
+    </div>
+    <div class="card">
+        <div class="card-title">⚙️ GPTモデル</div>
+        <label>モデル</label>
+        <select id="gpt-model">
+            <option value="gpt-4o">GPT-4o（推奨）</option>
+            <option value="gpt-4o-mini">GPT-4o mini（高速・低コスト）</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        </select>
+        <div class="btn-group">
+            <button class="btn btn-primary btn-full" onclick="saveModel()">💾 保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('main', this)">
+        <span class="nav-icon">🏌️</span>メイン
+    </button>
+    <button class="nav-item" onclick="showPage('settings', this)">
+        <span class="nav-icon">⚙️</span>設定
+    </button>
+    <button class="nav-item" onclick="showPage('api', this)">
+        <span class="nav-icon">🔑</span>API
+    </button>
+</nav>
+
+<!-- ========== Select Modal (main screen) ========== -->
+<div id="select-modal" class="modal-overlay" onclick="closeSelectModal(event)">
+    <div class="modal">
+        <div class="modal-title" id="select-modal-title">選択</div>
+        <div id="select-modal-list"></div>
+        <button class="btn btn-secondary btn-full" style="margin-top:12px;" onclick="closeSelectModal()">閉じる</button>
+    </div>
+</div>
+
+<!-- ========== Add / Edit Modal (settings) ========== -->
+<div id="edit-modal" class="modal-overlay" onclick="closeEditModal(event)">
+    <div class="modal">
+        <div class="modal-title" id="edit-modal-title">追加</div>
+        <div id="edit-modal-form"></div>
+        <div class="btn-group" style="margin-top:16px;">
+            <button class="btn btn-secondary" style="flex:1;" onclick="closeEditModal()">キャンセル</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="confirmEdit()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== Storage ====================
+const S = {
+    get: k => { try { return JSON.parse(localStorage.getItem('ga_' + k)); } catch { return null; } },
+    set: (k, v) => localStorage.setItem('ga_' + k, JSON.stringify(v)),
+    presets: type => S.get('p_' + type) || [],
+    savePresets: (type, arr) => S.set('p_' + type, arr),
+    defId: type => S.get('d_' + type),
+    setDef: (type, id) => S.set('d_' + type, id),
+};
+
+// ==================== State ====================
+const TYPES = ['condition', 'profile', 'club', 'ball', 'weather'];
+const selected = {};  // currently selected preset per type on main screen
+let selectModalType = null;
+let editModalType = null;
+let editModalId = null;   // null = new, number = editing existing
+let editGender = '男性';
+
+// ==================== Nav ====================
+function showPage(page, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    el.classList.add('active');
+    if (page === 'settings') renderAllMgmtLists();
+}
+
+// ==================== Accordion ====================
+function toggleAcc(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+}
+
+// ==================== Main: Select Modal ====================
+const SEL_LABELS = {
+    condition: 'アドバイス条件',
+    profile: 'プロフィール',
+    club: 'クラブ',
+    ball: 'ボール',
+    weather: '天気・コンディション',
+};
+
+function openSelectModal(type) {
+    selectModalType = type;
+    document.getElementById('select-modal-title').textContent = SEL_LABELS[type] + ' を選択';
+    renderSelectList(type);
+    document.getElementById('select-modal').classList.add('active');
+}
+
+function closeSelectModal(e) {
+    if (e && e.target !== document.getElementById('select-modal')) return;
+    document.getElementById('select-modal').classList.remove('active');
+    selectModalType = null;
+}
+
+function renderSelectList(type) {
+    const presets = S.presets(type);
+    const defId = S.defId(type);
+    const cur = selected[type];
+    const el = document.getElementById('select-modal-list');
+
+    if (!presets.length) {
+        el.innerHTML = '<p style="text-align:center;color:#6c757d;padding:24px 0;">プリセットがありません<br><small>設定画面で追加してください</small></p>';
+        return;
+    }
+    el.innerHTML = presets.map(p => `
+        <div class="preset-item ${cur && cur.id === p.id ? 'selected' : ''}" onclick="selectPreset('${type}', ${p.id})">
+            <div class="preset-name">${p.name}</div>
+            ${cur && cur.id === p.id ? '<span class="active-badge">使用中</span>' : ''}
+            ${p.id === defId ? '<span class="default-badge">デフォルト</span>' : ''}
+        </div>
+    `).join('');
+}
+
+function selectPreset(type, id) {
+    const preset = S.presets(type).find(p => p.id === id);
+    if (!preset) return;
+    selected[type] = preset;
+    updateMainRow(type, preset.name);
+    document.getElementById('select-modal').classList.remove('active');
+    selectModalType = null;
+}
+
+function updateMainRow(type, name) {
+    const el = document.getElementById('main-' + type);
+    if (!el) return;
+    if (name) {
+        el.textContent = name;
+        el.classList.remove('empty');
+    } else {
+        el.textContent = '未選択';
+        el.classList.add('empty');
+    }
+}
+
+// ==================== Settings: Management Lists ====================
+function renderAllMgmtLists() {
+    TYPES.forEach(type => renderMgmtList(type));
+}
+
+function renderMgmtList(type) {
+    const el = document.getElementById('mgmt-list-' + type);
+    if (!el) return;
+    const presets = S.presets(type);
+    const defId = S.defId(type);
+
+    if (!presets.length) {
+        el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px 0;">プリセットがありません</p>';
+        return;
+    }
+
+    const label = type === 'condition1' ? '条件 1' : type === 'condition2' ? '条件 2' : null;
+    let html = label ? `<div style="font-size:12px;font-weight:bold;color:var(--primary);margin-bottom:8px;">${label}</div>` : '';
+
+    html += presets.map(p => `
+        <div class="preset-mgmt-item ${p.id === defId ? 'is-default' : ''}">
+            <div class="preset-name">
+                ${p.name}
+                ${p.id === defId ? '<span class="default-badge" style="margin-left:6px;">デフォルト</span>' : ''}
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="setDefault('${type}',${p.id})" title="デフォルトに設定">⭐</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${type}',${p.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePreset('${type}',${p.id})">🗑</button>
+        </div>
+    `).join('');
+    el.innerHTML = html;
+}
+
+function setDefault(type, id) {
+    S.setDef(type, id);
+    renderMgmtList(type);
+    // If not yet selected on main, apply as selected
+    if (!selected[type]) {
+        const preset = S.presets(type).find(p => p.id === id);
+        if (preset) { selected[type] = preset; updateMainRow(type, preset.name); }
+    }
+}
+
+function deletePreset(type, id) {
+    if (!confirm('このプリセットを削除しますか？')) return;
+    S.savePresets(type, S.presets(type).filter(p => p.id !== id));
+    if (S.defId(type) === id) S.setDef(type, null);
+    if (selected[type]?.id === id) { selected[type] = null; updateMainRow(type, null); }
+    renderMgmtList(type);
+}
+
+// ==================== Settings: Add / Edit Modal ====================
+const EDIT_TITLES = {
+    condition: 'アドバイス条件',
+    profile: 'プロフィール',
+    club: 'クラブ',
+    ball: 'ボール',
+    weather: '天気・コンディション',
+};
+
+function openAddModal(type) {
+    document.querySelector('#edit-modal .btn-group:last-child').style.display = 'flex';
+    editModalType = type;
+    editModalId = null;
+    editGender = '男性';
+    document.getElementById('edit-modal-title').textContent = EDIT_TITLES[type] + ' を追加';
+    document.getElementById('edit-modal-form').innerHTML = buildEditForm(type, null);
+    document.getElementById('edit-modal').classList.add('active');
+}
+
+function openEditModal(type, id) {
+    document.querySelector('#edit-modal .btn-group:last-child').style.display = 'flex';
+    editModalType = type;
+    editModalId = id;
+    const preset = S.presets(type).find(p => p.id === id);
+    if (!preset) return;
+    editGender = preset.gender || '男性';
+    document.getElementById('edit-modal-title').textContent = EDIT_TITLES[type] + ' を編集';
+    document.getElementById('edit-modal-form').innerHTML = buildEditForm(type, preset);
+    document.getElementById('edit-modal').classList.add('active');
+}
+
+function closeEditModal(e) {
+    if (e && e.target !== document.getElementById('edit-modal')) return;
+    document.getElementById('edit-modal').classList.remove('active');
+    editModalType = null; editModalId = null;
+    document.querySelector('#edit-modal .btn-group:last-child').style.display = 'flex';
+}
+
+function buildEditForm(type, preset) {
+    const v = (field, def = '') => preset ? (preset[field] ?? def) : def;
+    switch (type) {
+        case 'condition':
+            return `
+                <div class="edit-form">
+                    <label>プリセット名</label>
+                    <input type="text" id="ef-name" placeholder="例: スコア重視" value="${v('name')}">
+                    <label>アドバイス条件</label>
+                    <textarea id="ef-content" rows="5" placeholder="GPTへの指示を入力...">${v('content')}</textarea>
+                </div>`;
+        case 'profile':
+            return `
+                <div class="edit-form">
+                    <label>プリセット名</label>
+                    <input type="text" id="ef-name" placeholder="例: 田中太郎" value="${v('name')}">
+                    <label>性別</label>
+                    <div class="toggle-group">
+                        <button class="toggle-opt ${editGender === '男性' ? 'active' : ''}" onclick="setEditGender('男性',this)">男性</button>
+                        <button class="toggle-opt ${editGender === '女性' ? 'active' : ''}" onclick="setEditGender('女性',this)">女性</button>
+                    </div>
+                    <div class="grid-2">
+                        <div><label>年齢</label>
+                            <div class="input-unit"><input type="number" id="ef-age" placeholder="40" value="${v('age')}"><span class="unit">歳</span></div>
+                        </div>
+                        <div><label>身長</label>
+                            <div class="input-unit"><input type="number" id="ef-height" placeholder="170" value="${v('height')}"><span class="unit">cm</span></div>
+                        </div>
+                    </div>
+                    <label>体重</label>
+                    <div class="input-unit" style="max-width:160px;">
+                        <input type="number" id="ef-weight" placeholder="70" value="${v('weight')}">
+                        <span class="unit">kg</span>
+                    </div>
+                </div>`;
+        case 'club':
+            return `
+                <div class="edit-form">
+                    <label>プリセット名 / クラブ名</label>
+                    <input type="text" id="ef-name" placeholder="例: TaylorMade Stealth2" value="${v('name')}">
+                </div>`;
+        case 'ball':
+            return `
+                <div class="edit-form">
+                    <label>プリセット名 / ボール名</label>
+                    <input type="text" id="ef-name" placeholder="例: Titleist Pro V1" value="${v('name')}">
+                </div>`;
+        case 'weather':
+            return `
+                <div class="edit-form">
+                    <label>プリセット名</label>
+                    <input type="text" id="ef-name" placeholder="例: 晴れ・無風" value="${v('name')}">
+                    <label>地面の硬さ</label>
+                    <input type="text" id="ef-ground" placeholder="例: 硬い、普通、柔らかい" value="${v('ground')}">
+                    <div class="grid-2">
+                        <div><label>温度</label>
+                            <div class="input-unit"><input type="number" id="ef-temp" placeholder="20" value="${v('temp')}"><span class="unit">°C</span></div>
+                        </div>
+                        <div><label>湿度</label>
+                            <div class="input-unit"><input type="number" id="ef-humidity" placeholder="60" value="${v('humidity')}"><span class="unit">%</span></div>
+                        </div>
+                        <div><label>気圧</label>
+                            <div class="input-unit"><input type="number" id="ef-pressure" placeholder="1013" value="${v('pressure')}"><span class="unit">hPa</span></div>
+                        </div>
+                        <div><label>風速</label>
+                            <div class="input-unit"><input type="number" id="ef-windspd" placeholder="3" value="${v('windspd')}"><span class="unit">m/s</span></div>
+                        </div>
+                    </div>
+                    <label>風向き</label>
+                    <div class="input-unit">
+                        <input type="number" id="ef-winddir" placeholder="0" value="${v('winddir')}">
+                        <span class="unit">°（0=北 / 90=東 / 180=南 / 270=西）</span>
+                    </div>
+                </div>`;
+    }
+}
+
+function setEditGender(g, btn) {
+    editGender = g;
+    btn.closest('.toggle-group').querySelectorAll('.toggle-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function confirmEdit() {
+    const name = document.getElementById('ef-name')?.value.trim();
+    if (!name) { alert('名前を入力してください'); return; }
+
+    const gv = id => document.getElementById(id)?.value || '';
+    let data = {};
+    switch (editModalType) {
+        case 'condition':
+            data = { name, content: gv('ef-content') }; break;
+        case 'profile':
+            data = { name, gender: editGender, age: gv('ef-age'), height: gv('ef-height'), weight: gv('ef-weight') }; break;
+        case 'club':
+        case 'ball':
+            data = { name }; break;
+        case 'weather':
+            data = { name, ground: gv('ef-ground'), temp: gv('ef-temp'), humidity: gv('ef-humidity'), pressure: gv('ef-pressure'), windspd: gv('ef-windspd'), winddir: gv('ef-winddir') }; break;
+    }
+
+    const presets = S.presets(editModalType);
+    if (editModalId) {
+        // Edit existing
+        const idx = presets.findIndex(p => p.id === editModalId);
+        if (idx >= 0) presets[idx] = { ...presets[idx], ...data };
+        // Update selected if this preset is in use
+        if (selected[editModalType]?.id === editModalId) {
+            selected[editModalType] = presets[idx];
+            updateMainRow(editModalType, presets[idx].name);
+        }
+    } else {
+        // New
+        const id = Date.now();
+        data.id = id;
+        presets.push(data);
+        if (presets.length === 1) S.setDef(editModalType, id);  // 最初はデフォルト
+    }
+    S.savePresets(editModalType, presets);
+    renderMgmtList(editModalType);
+    closeEditModal();
+}
+
+// ==================== Export / Import ====================
+function exportSettings() {
+    const data = {};
+    TYPES.forEach(t => {
+        data['p_' + t] = S.presets(t);
+        data['d_' + t] = S.defId(t);
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'golf_settings.json'; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importSettings(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            TYPES.forEach(t => {
+                if (data['p_' + t] !== undefined) S.savePresets(t, data['p_' + t]);
+                if (data['d_' + t] !== undefined) S.setDef(t, data['d_' + t]);
+            });
+            loadDefaults();
+            renderAllMgmtLists();
+            alert('インポートしました！');
+        } catch { alert('ファイルの読み込みに失敗しました。'); }
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ==================== API Settings ====================
+function saveApiKey() {
+    S.set('apikey', document.getElementById('api-key').value.trim());
+    alert('APIキーを保存しました');
+}
+function saveModel() {
+    S.set('model', document.getElementById('gpt-model').value);
+    alert('モデル設定を保存しました');
+}
+
+// ==================== Build Prompt ====================
+function buildPrompt() {
+    const golfData = document.getElementById('golf-data').value.trim();
+    const s = type => selected[type];
+
+    const condition = s('condition')?.content || '';
+    const prof = s('profile');
+    const club = s('club')?.name || '';
+    const ball = s('ball')?.name || '';
+    const weather = s('weather');
+
+    let prompt = 'あなたはゴルフのプロコーチです。以下の情報をもとに、的確で実践的なアドバイスをしてください。\n\n';
+
+    if (condition) {
+        prompt += `## アドバイス条件\n${condition}\n\n`;
+    }
+
+    if (prof) {
+        prompt += '## プレイヤー情報\n';
+        prompt += `性別: ${prof.gender}\n`;
+        if (prof.age)    prompt += `年齢: ${prof.age}歳\n`;
+        if (prof.height) prompt += `身長: ${prof.height}cm\n`;
+        if (prof.weight) prompt += `体重: ${prof.weight}kg\n`;
+        prompt += '\n';
+    }
+
+    if (club || ball) {
+        prompt += '## 使用器材\n';
+        if (club) prompt += `クラブ: ${club}\n`;
+        if (ball) prompt += `ボール: ${ball}\n`;
+        prompt += '\n';
+    }
+
+    if (weather) {
+        const { ground, temp, humidity, pressure, windspd, winddir } = weather;
+        const any = ground || temp || humidity || pressure || windspd || winddir;
+        if (any) {
+            prompt += '## コースコンディション\n';
+            if (ground)   prompt += `地面の硬さ: ${ground}\n`;
+            if (temp)     prompt += `温度: ${temp}°C\n`;
+            if (humidity) prompt += `湿度: ${humidity}%\n`;
+            if (pressure) prompt += `気圧: ${pressure}hPa\n`;
+            if (windspd)  prompt += `風速: ${windspd}m/s\n`;
+            if (winddir)  prompt += `風向き: ${winddir}°\n`;
+            prompt += '\n';
+        }
+    }
+
+    prompt += `## ゴルフデータ（16項目）\n${golfData}\n`;
+    return prompt;
+}
+
+// ==================== Generate Advice ====================
+async function generateAdvice() {
+    const apiKey = S.get('apikey');
+    if (!apiKey) { alert('APIキーが未設定です。\nAPI画面で設定してください。'); return; }
+    const data = document.getElementById('golf-data').value.trim();
+    if (!data) { alert('ゴルフデータを貼り付けてください。'); return; }
+
+    const model = S.get('model') || 'gpt-4o';
+    const prompt = buildPrompt();
+    const result = document.getElementById('advice-result');
+
+    result.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:14px;font-size:14px;">アドバイスを生成中...</p></div>';
+
+    try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], stream: true }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTPエラー ${res.status}`);
+        }
+        result.innerHTML = `<div class="card"><div class="card-title">🤖 アドバイス</div><div class="advice-box" id="advice-text"></div></div>`;
+        const box = document.getElementById('advice-text');
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split('\n'); buf = lines.pop();
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const raw = line.slice(6).trim();
+                if (raw === '[DONE]') break;
+                try { box.textContent += JSON.parse(raw).choices?.[0]?.delta?.content || ''; } catch {}
+            }
+        }
+        box.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    } catch (err) {
+        result.innerHTML = `<div class="error-box">❌ エラー: ${err.message}</div>`;
+    }
+}
+
+// ==================== Init ====================
+function loadDefaults() {
+    TYPES.forEach(type => {
+        const defId = S.defId(type);
+        if (!defId) return;
+        const preset = S.presets(type).find(p => p.id === defId);
+        if (preset) { selected[type] = preset; updateMainRow(type, preset.name); }
+    });
+}
+
+function init() {
+    loadDefaults();
+    const key = S.get('apikey');
+    if (key) document.getElementById('api-key').value = key;
+    const model = S.get('model');
+    if (model) document.getElementById('gpt-model').value = model;
+}
+
+init();
+</script>
+</body>
+</html>
