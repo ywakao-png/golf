@@ -397,8 +397,8 @@
         <div class="card-title">⚙️ GPTモデル</div>
         <label>モデル</label>
         <select id="gpt-model">
-            <option value="gpt-4o">GPT-4o（推奨）</option>
-            <option value="gpt-4o-mini">GPT-4o mini（高速・低コスト）</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4o-mini">GPT-4o mini（推奨）</option>
             <option value="gpt-4-turbo">GPT-4 Turbo</option>
             <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
         </select>
@@ -853,7 +853,7 @@ async function generateAdvice() {
     const data = document.getElementById('golf-data').value.trim();
     if (!data) { alert('ゴルフデータを貼り付けてください。'); return; }
 
-    const model = S.get('model') || 'gpt-4o';
+    const model = S.get('model') || 'gpt-4o-mini';
     const prompt = buildPrompt();
     const result = document.getElementById('advice-result');
 
@@ -869,7 +869,7 @@ async function generateAdvice() {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.error?.message || `HTTPエラー ${res.status}`);
         }
-        result.innerHTML = `<div class="card"><div class="card-title">🤖 アドバイス</div><div class="advice-box" id="advice-text"></div></div>`;
+        result.innerHTML = `<div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">🤖 アドバイス<button class="btn btn-secondary btn-sm" onclick="copyAdvice(this)">📋 コピー</button></div><div class="advice-box" id="advice-text"></div></div>`;
         const box = document.getElementById('advice-text');
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -889,6 +889,20 @@ async function generateAdvice() {
         box.scrollIntoView({ block: 'end', behavior: 'smooth' });
     } catch (err) {
         result.innerHTML = `<div class="error-box">❌ エラー: ${err.message}</div>`;
+    }
+}
+
+// ==================== Copy Advice ====================
+async function copyAdvice(btn) {
+    const text = document.getElementById('advice-text')?.textContent || '';
+    if (!text) return;
+    try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = '✅ コピー済';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+    } catch {
+        alert('コピーに失敗しました。');
     }
 }
 
