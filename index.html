@@ -255,10 +255,8 @@
 
 <div class="header">⛳ ゴルフアドバイス</div>
 
-<!-- ===================== MAIN PAGE ===================== -->
 <div id="page-main" class="page active">
 
-    <!-- Selector rows -->
     <div class="card" style="padding: 0; overflow: hidden;">
         <div style="padding: 12px 16px 8px; font-size: 12px; font-weight: bold; color: var(--text-muted); background: var(--bg);">使用する設定を選択</div>
         <div class="sel-row" onclick="openSelectModal('condition')">
@@ -293,9 +291,11 @@
         </div>
     </div>
 
-    <!-- Golf data -->
     <div class="card">
-        <div class="card-title">📋 ゴルフデータ（16項目）</div>
+        <div class="card-title" style="display: flex; align-items: center; justify-content: space-between;">
+            📋 ゴルフデータ（16項目）
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('golf-data').value=''">🗑 リセット</button>
+        </div>
         <textarea id="golf-data" rows="10" placeholder="ゴルフデータをここに貼り付けてください..."></textarea>
     </div>
 
@@ -306,10 +306,8 @@
     <div id="advice-result" style="margin-top: 14px;"></div>
 </div>
 
-<!-- ===================== SETTINGS PAGE ===================== -->
 <div id="page-settings" class="page">
 
-    <!-- Export / Import -->
     <div class="share-card">
         <div class="share-card-title">📤 設定の共有</div>
         <p class="share-note">エクスポートしたJSONを渡すと、他の人が同じプリセットをインポートして使えます。APIキーは含まれません。</p>
@@ -320,7 +318,6 @@
         <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importSettings(event)">
     </div>
 
-    <!-- Advice Conditions -->
     <div class="accordion">
         <button class="acc-header" onclick="toggleAcc(this)">
             <span class="acc-title">📝 アドバイス条件</span>
@@ -332,7 +329,6 @@
         </div>
     </div>
 
-    <!-- Profile -->
     <div class="accordion">
         <button class="acc-header" onclick="toggleAcc(this)">
             <span class="acc-title">👤 プロフィール</span>
@@ -344,7 +340,6 @@
         </div>
     </div>
 
-    <!-- Club -->
     <div class="accordion">
         <button class="acc-header" onclick="toggleAcc(this)">
             <span class="acc-title">🏌️ クラブ</span>
@@ -356,7 +351,6 @@
         </div>
     </div>
 
-    <!-- Ball -->
     <div class="accordion">
         <button class="acc-header" onclick="toggleAcc(this)">
             <span class="acc-title">⚪ ボール</span>
@@ -368,7 +362,6 @@
         </div>
     </div>
 
-    <!-- Weather -->
     <div class="accordion">
         <button class="acc-header" onclick="toggleAcc(this)">
             <span class="acc-title">🌤️ 天気・コンディション</span>
@@ -382,7 +375,6 @@
 
 </div>
 
-<!-- ===================== API PAGE ===================== -->
 <div id="page-api" class="page">
     <div class="card">
         <div class="card-title">🔑 OpenAI APIキー</div>
@@ -408,7 +400,6 @@
     </div>
 </div>
 
-<!-- Bottom Navigation -->
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="showPage('main', this)">
         <span class="nav-icon">🏌️</span>メイン
@@ -421,7 +412,6 @@
     </button>
 </nav>
 
-<!-- ========== Select Modal (main screen) ========== -->
 <div id="select-modal" class="modal-overlay" onclick="closeSelectModal(event)">
     <div class="modal">
         <div class="modal-title" id="select-modal-title">選択</div>
@@ -430,7 +420,6 @@
     </div>
 </div>
 
-<!-- ========== Add / Edit Modal (settings) ========== -->
 <div id="edit-modal" class="modal-overlay" onclick="closeEditModal(event)">
     <div class="modal">
         <div class="modal-title" id="edit-modal-title">追加</div>
@@ -680,7 +669,7 @@ function buildEditForm(type, preset) {
                     <label>プリセット名</label>
                     <input type="text" id="ef-name" placeholder="例: 晴れ・無風" value="${v('name')}">
                     <label>地面の硬さ</label>
-                    <input type="text" id="ef-ground" placeholder="例: 硬い、普通、柔らかい" value="${v('ground')}">
+                    <input type="text" id="ef-ground" placeholder="例: ハード、ミディアム、ソフト" value="${v('ground')}">
                     <div class="grid-2">
                         <div><label>温度</label>
                             <div class="input-unit"><input type="number" id="ef-temp" placeholder="20" value="${v('temp')}"><span class="unit">°C</span></div>
